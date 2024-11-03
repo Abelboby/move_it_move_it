@@ -8,14 +8,14 @@ A mischievous Windows application that playfully dodges your attempts to close w
 
 Watch how windows try to escape your cursor:
 
-https://github.com/Abelboby/move_it_move_it/assets/989e9ae4-3749-490f-924c-8dcbf867fdf2/demo.mp4
+![Window Moving Demo](https://github.com/Abelboby/move_it_move_it/assets/989e9ae4-3749-490f-924c-8dcbf867fdf2/demo.mp4)
 
 ## Download 📥
 
 [Download Latest Release](https://github.com/Abelboby/move_it_move_it/releases/latest)
 
 or direct download:
-- [Windows Executable (v1.0.0)](https://github.com/Abelboby/move_it_move_it/releases/download/v1.0.0/i_like_to_move_it_move_it.exe)
+- [Windows Executable (v1.0.0)](https://github.com/Abelboby/move_it_move_it/releases/download/on/i_like_to_move_it_move_it.exe)
 
 ## Features 🎯
 
