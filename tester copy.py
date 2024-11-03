@@ -9,11 +9,21 @@ import os
 from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPushButton
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt, QMetaObject, Q_ARG, QObject, pyqtSignal
+import sys
+import base64
 
 class SignalHandler(QObject):
     finished = pyqtSignal()
 
 signal_handler = SignalHandler()
+
+def get_resource_path(relative_path):
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def move_away_from_close_button():
     mouse_x, mouse_y = pyautogui.position()
@@ -67,14 +77,14 @@ def finish_annoying():
     print("Annoyance finished!")
     
     dialog = QDialog()
-    dialog.setWindowTitle("U didnt get it huh!")
+    dialog.setWindowTitle("Congratulations!")
     dialog.setFixedSize(300, 400)
     dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
     
     layout = QVBoxLayout()
     
     try:
-        image_path = "trollface.png"
+        image_path = get_resource_path("trollface.png")
         print(f"Attempting to load image from: {image_path}")
         
         image_label = QLabel()

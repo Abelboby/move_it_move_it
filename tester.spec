@@ -6,8 +6,16 @@ a = Analysis(
     ['tester.py'],
     pathex=[],
     binaries=[],
-    datas=[('trollface.png', '.')],  # Image will be embedded in the exe
-    hiddenimports=['win32gui', 'win32con', 'win32api'],
+    datas=[('trollface.png', '.')],  # Include the image file
+    hiddenimports=[
+        'win32gui',
+        'win32con',
+        'win32api',
+        'PyQt5',
+        'PyQt5.QtCore',
+        'PyQt5.QtGui',
+        'PyQt5.QtWidgets'
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -26,17 +34,18 @@ exe = EXE(
     a.zipfiles,
     a.datas,
     [],
-    name='WindowMover',
+    name='i_like_to_move_it_move_it',  # The name of your exe
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
     upx_exclude=[],
     runtime_tmpdir=None,
-    console=False,
+    console=False,  # Set to False to hide console window
     disable_windowed_traceback=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon='icon.ico'  # Icon file path
+    icon='icon.ico',  # Icon file
+    version='version.txt'  # Version information
 ) 

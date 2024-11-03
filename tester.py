@@ -60,24 +60,69 @@ def move_away_from_close_button():
 
     win32gui.EnumWindows(check_window, None)
 
+def show_cheater_dialog(minutes):
+    dialog = QDialog()
+    dialog.setWindowTitle("Nice Try! 🧐")
+    dialog.setFixedSize(300, 400)
+    dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
+    
+    layout = QVBoxLayout()
+    
+    # Add a "Caught You" emoji
+    emoji_label = QLabel("🕵️")
+    emoji_label.setFont(QFont("Arial", 48))
+    layout.addWidget(emoji_label, alignment=Qt.AlignCenter)
+    
+    # Add message
+    text_label = QLabel("Looks like someone's trying to cheat!\nBut you can't escape that easily...")
+    text_label.setFont(QFont("Arial", 12, QFont.Bold))
+    text_label.setAlignment(Qt.AlignCenter)
+    layout.addWidget(text_label)
+    
+    def restart_timer():
+        dialog.close()
+        # Restart with double the original duration
+        run_annoyance(minutes * 2)
+    
+    # Add restart button with threatening text
+    restart_button = QPushButton("Continue (with doubled duration)")
+    restart_button.setFont(QFont("Arial", 10))
+    restart_button.setFixedWidth(200)
+    restart_button.clicked.connect(restart_timer)
+    layout.addWidget(restart_button, alignment=Qt.AlignCenter)
+    
+    dialog.setLayout(layout)
+    
+    # Center the dialog
+    screen = QApplication.primaryScreen().geometry()
+    x = (screen.width() - dialog.width()) // 2
+    y = (screen.height() - dialog.height()) // 2
+    dialog.move(x, y)
+    
+    dialog.exec_()
+
 def annoy_user(duration):
     end_time = time.time() + duration
     print("Annoyance started...")
     
     pyautogui.FAILSAFE = False
     
-    while time.time() < end_time:
-        move_away_from_close_button()
-        time.sleep(0.001)
-    
-    print("Timer finished, showing final dialog...")
-    signal_handler.finished.emit()
+    try:
+        while time.time() < end_time:
+            move_away_from_close_button()
+            time.sleep(0.001)
+        
+        print("Timer finished, showing final dialog...")
+        signal_handler.finished.emit()
+    except Exception as e:
+        print("Window closed prematurely!")
+        show_cheater_dialog(duration / 60)  # Convert seconds to minutes
 
 def finish_annoying():
     print("Annoyance finished!")
     
     dialog = QDialog()
-    dialog.setWindowTitle("Congratulations!")
+    dialog.setWindowTitle("U did!")
     dialog.setFixedSize(300, 400)
     dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
     
@@ -126,6 +171,7 @@ def finish_annoying():
 
 def run_annoyance(minutes):
     duration = minutes * 60
+    # duration =20
     # Create and start the thread
     thread = threading.Thread(target=lambda: annoy_user(duration))
     thread.daemon = True
