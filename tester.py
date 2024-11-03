@@ -77,9 +77,9 @@ def move_away_from_close_button():
                 rect = win32gui.GetWindowRect(hwnd)
                 window_x, window_y, window_width, window_height = rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]
                 
-                # Calculate close button area (top-right corner) - increased detection area
-                close_button_x = window_x + window_width - 100  # Increased from 65 to 100
-                close_button_y = window_y + 40  # Increased from 25 to 40
+                # Calculate close button area (top-right corner) - much larger detection area
+                close_button_x = window_x + window_width - 150  # Increased from 100 to 150
+                close_button_y = window_y + 60  # Increased from 40 to 60
 
                 if is_mouse_near_close_button(mouse_x, mouse_y, close_button_x, close_button_y):
                     # Check if window is maximized and restore if it is
@@ -91,16 +91,13 @@ def move_away_from_close_button():
 
                     screen_width, screen_height = pyautogui.size()
                     
-                    # Determine which side of the screen the window is on and jump to opposite side
-                    if window_x < screen_width / 2:
-                        new_x = screen_width - window_width - 50  # Jump to right side
-                    else:
-                        new_x = 50  # Jump to left side
-                        
-                    if window_y < screen_height / 2:
-                        new_y = screen_height - window_height - 50  # Jump to bottom
-                    else:
-                        new_y = 50  # Jump to top
+                    # Random dodge movement (larger range)
+                    new_x = window_x + random.randint(-200, 200)
+                    new_y = window_y + random.randint(-200, 200)
+                    
+                    # Keep window within screen bounds
+                    new_x = max(0, min(new_x, screen_width - window_width))
+                    new_y = max(0, min(new_y, screen_height - window_height))
                     
                     win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, new_x, new_y, 
                                         window_width, window_height, 
@@ -112,8 +109,8 @@ def move_away_from_close_button():
     win32gui.EnumWindows(check_window, None)
 
 def is_mouse_near_close_button(mouse_x, mouse_y, close_button_x, close_button_y):
-    # Increased detection area
-    return abs(mouse_x - close_button_x) < 100 and abs(mouse_y - close_button_y) < 100  # Increased from 60 to 100
+    # Much larger detection area
+    return abs(mouse_x - close_button_x) < 150 and abs(mouse_y - close_button_y) < 150  # Increased from 100 to 150
 def finish_annoying():
     print("Annoyance finished!")  # Debug
     
@@ -127,6 +124,8 @@ def finish_annoying():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         image_path = os.path.join(script_dir, "trollface.jpg")
         print(f"Attempting to load image from: {image_path}")  # Debug
+        
+        print(f"File exists: {os.path.exists(image_path)}")
         
         # Load JPG image using PIL
         pil_image = Image.open(image_path)
@@ -162,7 +161,7 @@ def finish_annoying():
     # Make sure the dialog stays on top
     dialog.attributes('-topmost', True)
     dialog.mainloop()
-    dialog.attributes('-topmost', True)
+    dialog.attributes('-topmost', True)  # Keep it on top
     dialog.mainloop()
 
 # Start the prank
