@@ -8,7 +8,12 @@ A mischievous Windows application that playfully dodges your attempts to close w
 
 Watch how windows try to escape your cursor:
 
-![Window Moving Demo](assets/demo1.mp4)
+### Quick Preview
+
+![Window Moving Demo](assets/demo.gif)
+
+### Full Version
+![Watch Full Version](https://github.com/Abelboby/move_it_move_it/issues/1#issue-2631222203)
 
 ## Download 📥
 
