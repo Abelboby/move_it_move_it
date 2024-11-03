@@ -1,4 +1,4 @@
-# I Like To Move It Move It 🪟
+# I Like To Move It Move It 😏
 
 A mischievous Windows application that playfully dodges your attempts to close windows. When you try to click the close button, the window will dance away from your cursor! 
 
