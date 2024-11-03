@@ -13,13 +13,14 @@ Watch how windows try to escape your cursor:
 ![Window Moving Demo](assets/demo.gif)
 
 ### Full Version
-![Watch Full Version](https://github.com/Abelboby/move_it_move_it/issues/1#issue-2631222203)
+[Watch Full Version](https://github.com/Abelboby/move_it_move_it/issues/1#issue-2631222203)
 
 ## Download 📥
 
 [Download Latest Release](https://github.com/Abelboby/move_it_move_it/releases/latest)
 
 or direct download:
+
 [Windows Executable (v1.0.0)](https://github.com/Abelboby/move_it_move_it/releases/download/on/i_like_to_move_it_move_it.exe)
 
 ## Features 🎯
