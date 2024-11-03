@@ -1,0 +1,4 @@
+pywin32
+pyautogui
+PyQt5
+pillow

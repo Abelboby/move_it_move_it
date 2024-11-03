@@ -1,72 +1,29 @@
-import tkinter as tk
-import pyautogui
 import win32gui
 import win32con
-import threading
+import pyautogui
 import time
 import random
-import keyboard  # For detecting Alt+F4
-from PIL import Image, ImageTk
+import threading
 import webbrowser
 import os
+from PyQt5.QtWidgets import QApplication, QDialog, QVBoxLayout, QLabel, QPushButton
+from PyQt5.QtGui import QPixmap, QFont
+from PyQt5.QtCore import Qt, QMetaObject, Q_ARG, QObject, pyqtSignal
+import sys
+import base64
 
-def start_timer():
-    print("Starting timer window...")  # Debug
-    root = tk.Tk()
-    root.geometry("200x100")
-    tk.Label(root, text="Pick a timer duration:").pack()
-    
-    for minutes in [1, 3, 5]:
-        tk.Button(root, text=f"{minutes} min", command=lambda m=minutes: run_annoyance(m)).pack()
-    
-    root.mainloop()
+class SignalHandler(QObject):
+    finished = pyqtSignal()
 
-def run_annoyance(minutes):
-    duration = minutes * 60
-    print(f"Annoyance timer set for {minutes} minutes.")  # Debug
-    timer_thread = threading.Thread(target=annoy_user, args=(duration,))
-    timer_thread.start()
-    
-    # Start a separate thread for panic mode detection
-    panic_thread = threading.Thread(target=detect_panic_mode)
-    panic_thread.start()
+signal_handler = SignalHandler()
 
-def detect_panic_mode():
-    # Monitor for Alt+F4
-    while True:
-        if keyboard.is_pressed("alt+f4"):
-            print("Panic mode activated!")  # Debug
-            panic_mode()
-            time.sleep(1)  # Avoid rapid re-triggering
-
-def panic_mode():
-    # Get all open window handles and move each to a random position
-    def enum_windows(hwnd, _):
-        if win32gui.IsWindowVisible(hwnd):
-            try:
-                rect = win32gui.GetWindowRect(hwnd)
-                window_x, window_y, window_width, window_height = rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]
-                
-                # Move window to a random position on the screen
-                screen_width, screen_height = pyautogui.size()
-                new_x = random.randint(0, screen_width - window_width)
-                new_y = random.randint(0, screen_height - window_height)
-                
-                win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, new_x, new_y, window_width, window_height, 0)
-                print(f"Window scattered to: ({new_x}, {new_y})")  # Debug
-            except:
-                pass
-
-    # Enumerate through all windows and apply the scatter effect
-    win32gui.EnumWindows(enum_windows, None)
-
-def annoy_user(duration):
-    end_time = time.time() + duration
-    print("Annoyance started...")  # Debug
-    while time.time() < end_time:
-        move_away_from_close_button()
-        time.sleep(0.001)  # Reduced from 0.01 to 0.001 for better responsiveness
-    finish_annoying()
+def get_resource_path(relative_path):
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 def move_away_from_close_button():
     mouse_x, mouse_y = pyautogui.position()
@@ -77,93 +34,153 @@ def move_away_from_close_button():
                 rect = win32gui.GetWindowRect(hwnd)
                 window_x, window_y, window_width, window_height = rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]
                 
-                # Calculate close button area (top-right corner) - much larger detection area
-                close_button_x = window_x + window_width - 150  # Increased from 100 to 150
-                close_button_y = window_y + 60  # Increased from 40 to 60
+                # Calculate close button area (top-right corner)
+                close_button_x = window_x + window_width - 150
+                close_button_y = window_y + 80
 
-                if is_mouse_near_close_button(mouse_x, mouse_y, close_button_x, close_button_y):
-                    # Check if window is maximized and restore if it is
+                if abs(mouse_x - close_button_x) < 150 and abs(mouse_y - close_button_y) < 150:
                     style = win32gui.GetWindowLong(hwnd, win32con.GWL_STYLE)
                     if style & win32con.WS_MAXIMIZE:
                         win32gui.ShowWindow(hwnd, win32con.SW_RESTORE)
                         rect = win32gui.GetWindowRect(hwnd)
                         window_x, window_y, window_width, window_height = rect[0], rect[1], rect[2] - rect[0], rect[3] - rect[1]
 
-                    screen_width, screen_height = pyautogui.size()
-                    
-                    # Random dodge movement (larger range)
                     new_x = window_x + random.randint(-200, 200)
                     new_y = window_y + random.randint(-200, 200)
                     
-                    # Keep window within screen bounds
+                    screen_width, screen_height = pyautogui.size()
                     new_x = max(0, min(new_x, screen_width - window_width))
                     new_y = max(0, min(new_y, screen_height - window_height))
                     
                     win32gui.SetWindowPos(hwnd, win32con.HWND_TOP, new_x, new_y, 
-                                        window_width, window_height, 
-                                        win32con.SWP_SHOWWINDOW)
+                                        window_width, window_height, 0)
                     return
             except:
                 pass
 
     win32gui.EnumWindows(check_window, None)
 
-def is_mouse_near_close_button(mouse_x, mouse_y, close_button_x, close_button_y):
-    # Much larger detection area
-    return abs(mouse_x - close_button_x) < 150 and abs(mouse_y - close_button_y) < 150  # Increased from 100 to 150
+def annoy_user(duration):
+    end_time = time.time() + duration
+    print("Annoyance started...")
+    
+    pyautogui.FAILSAFE = False
+    
+    while time.time() < end_time:
+        move_away_from_close_button()
+        time.sleep(0.001)
+    
+    print("Timer finished, showing final dialog...")
+    signal_handler.finished.emit()
+
 def finish_annoying():
-    print("Annoyance finished!")  # Debug
+    print("Annoyance finished!")
     
-    # Create a Tkinter window for custom dialog
-    dialog = tk.Tk()
-    dialog.title("Congratulations!")
+    dialog = QDialog()
+    dialog.setWindowTitle("Congratulations!")
+    dialog.setFixedSize(300, 400)
+    dialog.setWindowFlags(Qt.WindowStaysOnTopHint)
     
-    # Load and display the trollface image
+    layout = QVBoxLayout()
+    
     try:
-        # Get the absolute path to the image
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        image_path = os.path.join(script_dir, "trollface.jpg")
-        print(f"Attempting to load image from: {image_path}")  # Debug
+        image_path = get_resource_path("trollface.png")
+        print(f"Attempting to load image from: {image_path}")
         
-        print(f"File exists: {os.path.exists(image_path)}")
+        image_label = QLabel()
+        pixmap = QPixmap(image_path)
+        pixmap = pixmap.scaled(200, 150, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        image_label.setPixmap(pixmap)
+        layout.addWidget(image_label, alignment=Qt.AlignCenter)
         
-        # Load JPG image using PIL
-        pil_image = Image.open(image_path)
-        # Optionally resize the image if it's too large
-        pil_image = pil_image.resize((200, 200))  # Adjust size as needed
-        photo = ImageTk.PhotoImage(pil_image)
-        img_label = tk.Label(dialog, image=photo)
-        img_label.photo = photo  # Keep a reference!
-        img_label.pack(pady=10)
-        print(f"Image size: {pil_image.size}")  # Add this after pil_image = Image.open(image_path)
     except Exception as e:
-        print(f"Image loading error: {e}")  # Debug
-        # Fallback if image fails to load
-        tk.Label(dialog, text="😈", font=("Arial", 48)).pack(pady=10)
+        print(f"Image loading error: {e}")
+        emoji_label = QLabel("😈")
+        emoji_label.setFont(QFont("Arial", 48))
+        layout.addWidget(emoji_label, alignment=Qt.AlignCenter)
     
-    tk.Label(dialog, text="Congrats! You can close windows now!").pack(pady=10)
+    text_label = QLabel("BRUHHHHH!!!")
+    text_label.setFont(QFont("Arial", 12, QFont.Bold))
+    layout.addWidget(text_label, alignment=Qt.AlignCenter)
     
     def on_ok():
         # Create a separate thread for opening the browser
         threading.Thread(target=lambda: webbrowser.open("https://www.youtube.com/watch?v=dQw4w9WgXcQ")).start()
-        dialog.destroy()
+        dialog.close()
     
-    tk.Button(dialog, text="OK", command=on_ok).pack(pady=10)
+    ok_button = QPushButton("Quit")
+    ok_button.setFont(QFont("Arial", 10))
+    ok_button.setFixedWidth(100)
+    ok_button.clicked.connect(on_ok)
+    layout.addWidget(ok_button, alignment=Qt.AlignCenter)
     
-    # Center the dialog on screen
-    dialog.update_idletasks()
-    width = dialog.winfo_width()
-    height = dialog.winfo_height()
-    x = (dialog.winfo_screenwidth() // 2) - (width // 2)
-    y = (dialog.winfo_screenheight() // 2) - (height // 2)
-    dialog.geometry(f'{width}x{height}+{x}+{y}')
+    dialog.setLayout(layout)
     
-    # Make sure the dialog stays on top
-    dialog.attributes('-topmost', True)
-    dialog.mainloop()
-    dialog.attributes('-topmost', True)  # Keep it on top
-    dialog.mainloop()
+    # Center the dialog
+    screen = QApplication.primaryScreen().geometry()
+    x = (screen.width() - dialog.width()) // 2
+    y = (screen.height() - dialog.height()) // 2
+    dialog.move(x, y)
+    
+    dialog.exec_()
 
-# Start the prank
-start_timer()
-start_timer()
+def run_annoyance(minutes):
+    duration = minutes * 60
+    # Create and start the thread
+    thread = threading.Thread(target=lambda: annoy_user(duration))
+    thread.daemon = True
+    signal_handler.finished.connect(finish_annoying)
+    thread.start()
+
+def start_timer():
+    print("Starting timer window...")
+    
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+    
+    dialog = QDialog()
+    dialog.setWindowTitle("Timer Selection")
+    dialog.setFixedSize(200, 150)
+    
+    layout = QVBoxLayout()
+    
+    label = QLabel("Pick a timer duration:")
+    label.setFont(QFont("Arial", 10))
+    layout.addWidget(label, alignment=Qt.AlignCenter)
+    
+    for minutes in [1, 3, 5]:
+        button = QPushButton(f"{minutes} min")
+        button.clicked.connect(lambda checked, m=minutes: (dialog.close(), run_annoyance(m)))
+        layout.addWidget(button)
+    
+    dialog.setLayout(layout)
+    
+    screen = QApplication.primaryScreen().geometry()
+    x = (screen.width() - dialog.width()) // 2
+    y = (screen.height() - dialog.height()) // 2
+    dialog.move(x, y)
+    
+    dialog.exec_()
+
+def open_url(url):
+    """Try multiple methods to open URL"""
+    methods = [
+        lambda: webbrowser.open_new(url),
+        lambda: os.system(f'start {url}'),
+        lambda: os.startfile(url),
+        lambda: webbrowser.get('windows-default').open(url)
+    ]
+    
+    for method in methods:
+        try:
+            method()
+            return True
+        except:
+            continue
+    return False
+
+if __name__ == '__main__':
+    app = QApplication([])
+    start_timer()
+    app.exec_()
